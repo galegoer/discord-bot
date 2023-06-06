@@ -25,4 +25,16 @@ client.on('messageCreate', (msg) => {
     }
 });
 
+client.on('interactionCreate', (interaction) => {
+    if (!interaction.isChatInputCommand()) return;
+
+    console.log(interaction.commandName);
+    if (interaction.commandName === 'hey') {
+        interaction.reply('hey!');
+    }
+    if (interaction.commandName === 'ping') {
+        interaction.reply('Pong!');
+    }
+})
+
 client.login(process.env.TOKEN);
