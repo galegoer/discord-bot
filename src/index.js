@@ -19,7 +19,6 @@ client.on('messageCreate', (msg) => {
     if (msg.author.bot) {
         return;
     }
-    console.log(msg.content);
     if (msg.content === 'hello' || msg.content === 'hi') {
         msg.reply(':wave: hi');
     }
@@ -34,6 +33,12 @@ client.on('interactionCreate', (interaction) => {
     }
     if (interaction.commandName === 'ping') {
         interaction.reply('Pong!');
+    }
+    if (interaction.commandName === 'pepega-add') {
+        const num1 = interaction.options.get('first-number').value;
+        const num2 = interaction.options.get('second-number').value;
+
+        interaction.reply(`The sum of these two numbers is ${num1.toString() + num2.toString()} :slight_smile:`)
     }
 })
 
