@@ -11,6 +11,24 @@ const commands = [
         description: 'Pong!',
     },
     {
+        name: 'embed',
+        description: 'explain someone',
+        options: [
+            {
+                name: 'person',
+                description: 'Embeds a description of a person.',
+                type: ApplicationCommandOptionType.String,
+                choices: [
+                    {
+                        name: 'Eric',
+                        value: 'Eric',
+                    },
+                ],
+                required: true,
+            },
+        ]
+    },
+    {
         name: 'pepega-add',
         description: 'Adds two numbers pepelaugh',
         options: [
