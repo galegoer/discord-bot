@@ -1,5 +1,6 @@
 require('dotenv').config();
 const { Client, IntentsBitField, messageLink, EmbedBuilder, ActivityType } = require('discord.js');
+const { Configuration, OpenAIApi } = require('openai');
 
 const client = new Client({
     intents: [
@@ -22,14 +23,46 @@ client.on('ready', (c) => {
     // client.user.setStatus('idle');
 });
 
+const configuration = new Configuration({
+    apiKey: process.env.API_KEY,
+})
+const openai = new OpenAIApi(configuration);
+
+async function chatBotResponse(msg) {
+    let convoLog = [{ role: 'system', content: "You're a sarcastic chatbot that thinks they are cooler than the people asking questions."}]
+    await msg.channel.sendTyping();
+
+    let prevMsgs = await msg.channel.messages.fetch({ limit: 10 });
+    prevMsgs.reverse();
+
+    prevMsgs.forEach((prevMsg) => {
+        // Ignore other bots but not itself (may not be necessary depending on channel)
+        if (prevMsg.author.id !== client.user.id && msg.author.bot) return;
+        // ignore if last message was from someone else
+        if (prevMsg.author.id !== msg.author.id) return;
+        convoLog.push({
+            role: 'user',
+            content: prevMsg.content,
+        });
+    });
+
+    const result = await openai.createChatCompletion({
+        model: 'gpt-3.5-turbo',
+        messages: convoLog,
+    });
+
+    msg.reply(result.data.choices[0].message);
+}
+
 client.on('messageCreate', (msg) => {
     // author is a bot don't respond
-    if (msg.author.bot) {
-        return;
-    }
+    if (msg.author.bot) return;
     if (msg.content === 'hello' || msg.content === 'hi') {
         msg.reply(':wave: hi');
     }
+    if (msg.channel.id === process.env.CHANNEL_ID) chatBotResponse(msg);
+
+
 });
 
 client.on('interactionCreate', (interaction) => {
@@ -67,6 +100,6 @@ client.on('interactionCreate', (interaction) => {
 
         interaction.reply({ embeds: [embed]})
     }
-})
+});
 
 client.login(process.env.TOKEN);
