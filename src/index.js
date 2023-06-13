@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { Client, IntentsBitField, messageLink, EmbedBuilder, ActivityType } = require('discord.js');
 const { Configuration, OpenAIApi } = require('openai');
+const mongoose = require('mongoose');
 
 const client = new Client({
     intents: [
@@ -101,5 +102,14 @@ client.on('interactionCreate', (interaction) => {
         interaction.reply({ embeds: [embed]})
     }
 });
+
+(async () => {
+    try {
+        await mongoose.connect(process.env.MONGODB_URI);
+        console.log('Connected to DB.');
+    } catch (error) {
+        console.log(`Error: ${error}`);
+    }
+})();
 
 client.login(process.env.TOKEN);
