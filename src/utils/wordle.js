@@ -61,11 +61,8 @@ async function startGame(msg, guesses, answer) {
     let rowOffset = 0;
     let buffer = 0;
 
-    for (let j = 0; j < 6; j++)
-    {
-        for (let i = 0; i < 5; i++)
-        {
-
+    for (let j = 0; j < 6; j++) {
+        for (let i = 0; i < 5; i++) {
             if(guesses[j] === undefined) square = emptySquare;
             else if(guesses[j].charAt(i) === answer[j].charAt(i)) square = greenSquare;
             else if(answer[j].includes(guesses.charAt(i))) square = yellowSquare;
@@ -97,19 +94,25 @@ async function LoadNewWordle(client, msg) {
     }
 }
 
-function GuessWordle(client, msg) {
+async function GuessWordle(client, msg) {
 
     if(canPlay(msg)) {
-        // TODO: if game is started
-        // if(gameStarted()) {
+        // if game hasn't started
+        // TODO: pull guesses from user, could pull previous messages but they may talk in between
+        let prevMsgs = await msg.channel.messages.fetch({ limit: 10 });
+        let guesses = [];
+        for(let i=0; i < prevMsgs.length; i++) {
+            // TODO: account for guesses that were bad
+            if(prevMsgs[i].includes('!guess')) guesses.push(prevMsgs[i].split(" ")[i]);
+        }
 
-        // } else {
-        //     msg.reply("You have not started a game yet today");
-        // }
+        if(guesses.length === 0) {
+            msg.reply("You have not started a game yet today. Type !playwordle to begin.");
+        }
         var guess = msg.content.split(" ")[1];
             
         if(!validGuess(guess)) {
-            msg.reply("Guesses must be a valid 5 letter word ");
+            msg.reply("Guesses must be a valid 5 letter word.");
             return;
         }
 
@@ -119,7 +122,7 @@ function GuessWordle(client, msg) {
         //check to see if guess and answer match
         for (var c=0; c < guess.length; c++) {
             if (guess.charCodeAt(c) !== answer.charCodeAt(c)) {
-                // TODO: store guesses in mongodb
+                // TODO: store guesses in mongodb? guesses stored by prev msgs for now
                 if(guesses.length === 5) {
                     msg.reply("Game over");
                 }
