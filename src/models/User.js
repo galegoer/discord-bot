@@ -16,6 +16,18 @@ const userSchema = new Schema({
     lastDaily: {
         type: Date,
         required: true,
+    },
+    lastWordle: {
+        type: Date,
+        required: true,
+    },
+    wordleWins: {
+        type: Number,
+        default: 0,
+    },
+    numGames: {
+        type: Number,
+        default: 0,
     }
 })
 
