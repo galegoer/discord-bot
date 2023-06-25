@@ -1,11 +1,11 @@
 const User = require('../models/User');
 const Canvas = require('canvas');
 
-async function canPlay(interaction) {
+async function canPlay(msg) {
     try {
         const query = {
-            userId: interaction.member.id,
-            guildId: interaction.guild.id,
+            userId: msg.author.id,
+            guildId: msg.guildId,
         };
         let user = await User.findOne(query);
 
@@ -15,7 +15,7 @@ async function canPlay(interaction) {
             console.log(currentDate);
 
             if (lastDailyDate === currentDate) {
-                // interaction.editReply(
+                // msg.editReply(
                 //     'You have already played your daily wordle. Come back tomorrow!'
                 // );
                 return false;
@@ -73,10 +73,10 @@ async function startGame(msg, guesses, answer) {
                 context.fillText(guesses[j].charAt(i), (squareSize/2)+buffer+squareSize*i, rowOffset+42);
             }
 
-            buffer+=5;
+            buffer += 5;
         }
-        buffer=0;
-        rowOffset+=squareSize+5;
+        buffer = 0;
+        rowOffset += squareSize+5;
     }
 
     const attachment = new MessageAttachment(canvas.toBuffer(), 'wordle.png');
@@ -85,12 +85,12 @@ async function startGame(msg, guesses, answer) {
 };
 
 async function LoadNewWordle(client, msg) {
-    console.log(client);
-    console.log(msg);
+    // console.log(client);
+    // console.log(msg);
 
     if(canPlay(msg)) {
         let answer = randomWord();
-        startGame(msg, "", answer);
+        startGame(msg, [], answer);
     }
 }
 
@@ -102,8 +102,9 @@ async function GuessWordle(client, msg) {
         let prevMsgs = await msg.channel.messages.fetch({ limit: 10 });
         let guesses = [];
         for(let i=0; i < prevMsgs.length; i++) {
-            // TODO: account for guesses that were bad
-            if(prevMsgs[i].includes('!guess')) guesses.push(prevMsgs[i].split(" ")[i]);
+            if(prevMsgs[i].includes('!guess') && validGuess(prevMsgs[i].split(" ")[i])) {
+                guesses.push(prevMsgs[i].split(" ")[i]);
+            }
         }
 
         if(guesses.length === 0) {
