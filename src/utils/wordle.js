@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Canvas = require('canvas');
+const path = require('path');
 
 async function canPlay(msg) {
     try {
@@ -44,17 +45,17 @@ async function startGame(msg, guesses, answer) {
     const canvas = Canvas.createCanvas(330, 397);
     const context = canvas.getContext('2d');
 
-    const background = await Canvas.loadImage('./images/BlankImage.png');
+    const background = await Canvas.loadImage(path.resolve(__dirname, '../images/BlankImage.png'));
     context.drawImage(background, 0, 0, canvas.width, canvas.height);
 
     context.font = '42px Clear Sans, Helvetica Neue, Arial, sans-serif';
     context.textAlign = 'center'
     context.fillStyle = '#d7dadc';
 
-    const absentSquare = await Canvas.loadImage('./images/ColorAbsent.png');
-    const emptySquare = await Canvas.loadImage('./images/EmptySquare.png');
-    const greenSquare = await Canvas.loadImage('./images/GreenSquare.png');
-    const yellowSquare = await Canvas.loadImage('./images/YellowSquare.png');
+    const absentSquare = await Canvas.loadImage(path.resolve(__dirname, '../images/ColorAbsent.png'));
+    const emptySquare = await Canvas.loadImage(path.resolve(__dirname, '../images/EmptySquare.png'));
+    const greenSquare = await Canvas.loadImage(path.resolve(__dirname, '../images/GreenSquare.png'));
+    const yellowSquare = await Canvas.loadImage(path.resolve(__dirname, '../images/YellowSquare.png'));
     let square = absentSquare;
 
     let squareSize = 62;
@@ -79,9 +80,10 @@ async function startGame(msg, guesses, answer) {
         rowOffset += squareSize+5;
     }
 
-    const attachment = new MessageAttachment(canvas.toBuffer(), 'wordle.png');
-
-    msg.reply({files: [attachment] });  
+    msg.reply({ files: [{attachment: canvas.toBuffer(), name: 'wordle.png'}]})
+    .catch((error) => {
+        console.error('Error sending wordle: ', error);
+    });
 };
 
 async function LoadNewWordle(client, msg) {
@@ -100,6 +102,7 @@ async function GuessWordle(client, msg) {
         // if game hasn't started
         // TODO: pull guesses from user, could pull previous messages but they may talk in between
         let prevMsgs = await msg.channel.messages.fetch({ limit: 10 });
+        // console.log(prevMsgs);
         let guesses = [];
         for(let i=0; i < prevMsgs.length; i++) {
             if(prevMsgs[i].includes('!guess') && validGuess(prevMsgs[i].split(" ")[i])) {
