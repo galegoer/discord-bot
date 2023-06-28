@@ -11,22 +11,30 @@ async function canPlay(msg) {
         let user = await User.findOne(query);
 
         if (user) {
-            const lastDailyDate = user.lastDaily.toDateString();
+            const lastWordle = user.lastWordleDate.toDateString();
             const currentDate = new Date().toDateString();
-            console.log(currentDate);
+            console.log(lastWordle, currentDate);
 
-            if (lastDailyDate === currentDate) {
-                // msg.editReply(
-                //     'You have already played your daily wordle. Come back tomorrow!'
-                // );
-                return false;
+            if (lastWordle === currentDate) {
+                msg.reply('You have already played your daily wordle. Come back tomorrow!');
+                return;
             }
-            user.lastDaily = new Date();
+        } else {
+            // set to yesterday because new user nothing started
+            let yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            console.log(yesterday.toDateString());
+            user = new User({
+                ...query,
+                lastDaily: yesterday,
+                lastWordleDate: yesterday,
+            });
         }
+        await user.save();
+        return user;
     } catch (error) {
         console.log(`Error with !playwordle: ${error}`);
     }
-    return true;
 };
 
 function randomWord() {
@@ -41,7 +49,7 @@ function validGuess(guess) {
     return true;
 };
 
-async function startGame(msg, guesses, answer) {
+async function showUpdate(msg, guesses, user) {
     const canvas = Canvas.createCanvas(330, 397);
     const context = canvas.getContext('2d');
 
@@ -61,11 +69,17 @@ async function startGame(msg, guesses, answer) {
     let squareSize = 62;
     let rowOffset = 0;
     let buffer = 0;
+    let numGreen = 0;
+    console.log(user);
+    let answer = user.lastWordle;
 
     for (let j = 0; j < 6; j++) {
         for (let i = 0; i < 5; i++) {
             if(guesses[j] === undefined) square = emptySquare;
-            else if(guesses[j].charAt(i) === answer[j].charAt(i)) square = greenSquare;
+            else if(guesses[j].charAt(i) === answer[j].charAt(i)) {
+                square = greenSquare;
+                numGreen += 1;
+            }
             else if(answer[j].includes(guesses.charAt(i))) square = yellowSquare;
             else square = absentSquare;
 
@@ -79,39 +93,54 @@ async function startGame(msg, guesses, answer) {
         buffer = 0;
         rowOffset += squareSize+5;
     }
-
-    msg.reply({ files: [{attachment: canvas.toBuffer(), name: 'wordle.png'}]})
-    .catch((error) => {
-        console.error('Error sending wordle: ', error);
-    });
+    if(numGreen == 5) {
+        msg.reply(`Congrats! You guessed the word ${answer} in ${guesses.length+1} tries!`);
+    } else if (guesses == 5) {
+        msg.reply(`You failed to guess the word ${answer} in 5 tries! Try again tomorrow!`);
+    } else {
+        msg.reply({ files: [{attachment: canvas.toBuffer(), name: 'wordle.png'}]})
+        .catch((error) => {
+            console.error('Error sending wordle: ', error);
+        });
+        return;
+    }
+    user.lastWordleDate = new Date();
+    user.lastWordle = "";
+    await user.save();
+    return;
 };
 
 async function LoadNewWordle(client, msg) {
-    // console.log(client);
-    // console.log(msg);
 
-    if(canPlay(msg)) {
+    let user = await canPlay(msg);
+    if(user !== undefined) {
         let answer = randomWord();
-        startGame(msg, [], answer);
+        user.lastWordle = answer;
+        await user.save();
+        // start off board
+        showUpdate(msg, [], user);
+        return;
     }
 }
 
 async function GuessWordle(client, msg) {
-
-    if(canPlay(msg)) {
+    let user = await canPlay(msg);
+    // console.log(user);
+    if(user !== undefined) {
         // if game hasn't started
         // TODO: pull guesses from user, could pull previous messages but they may talk in between
         let prevMsgs = await msg.channel.messages.fetch({ limit: 10 });
-        // console.log(prevMsgs);
         let guesses = [];
         for(let i=0; i < prevMsgs.length; i++) {
             if(prevMsgs[i].includes('!guess') && validGuess(prevMsgs[i].split(" ")[i])) {
                 guesses.push(prevMsgs[i].split(" ")[i]);
             }
         }
+        console.log(guesses);
 
-        if(guesses.length === 0) {
+        if(user.lastWordle == "") {
             msg.reply("You have not started a game yet today. Type !playwordle to begin.");
+            return;
         }
         var guess = msg.content.split(" ")[1];
             
@@ -121,24 +150,8 @@ async function GuessWordle(client, msg) {
         }
 
         // Check guess
-        // checkGuess(guess);
-
-        //check to see if guess and answer match
-        for (var c=0; c < guess.length; c++) {
-            if (guess.charCodeAt(c) !== answer.charCodeAt(c)) {
-                // TODO: store guesses in mongodb? guesses stored by prev msgs for now
-                if(guesses.length === 5) {
-                    msg.reply("Game over");
-                }
-                return;
-            }
-        }
-
-        msg.reply(`Congrats! You guessed the word ${answer} in ${guesses.length+1} tries!`)
+        showUpdate(msg, guesses, user);
     
-        return;
-    } else {
-        msg.reply("You've already played today try again tomorrow.");
         return;
     }
 }

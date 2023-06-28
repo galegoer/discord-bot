@@ -44,9 +44,13 @@ module.exports = {
                 
                 user.lastDaily = new Date();
             } else {
+                // set to yesterday because new user no wordle but daily points will be added
+                let yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
                 user = new User({
                     ...query,
                     lastDaily: new Date(),
+                    lastWordleDate: yesterday,
                 });
             }
 

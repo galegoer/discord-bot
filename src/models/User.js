@@ -17,9 +17,13 @@ const userSchema = new Schema({
         type: Date,
         required: true,
     },
-    lastWordle: {
+    lastWordleDate: {
         type: Date,
         required: true,
+    },
+    lastWordle: {
+        type: String,
+        default: "",
     },
     wordleWins: {
         type: Number,
