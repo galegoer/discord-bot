@@ -11,5 +11,5 @@ module.exports = (client, message) => {
     }
     if(message.content === "!wordlestats") {
         ShowStats(client, message);
-    }   
+    }
 }

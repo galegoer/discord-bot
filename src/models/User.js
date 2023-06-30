@@ -21,7 +21,7 @@ const userSchema = new Schema({
         type: Date,
         required: true,
     },
-    lastWordle: {
+    currWordle: {
         type: String,
         default: "",
     },

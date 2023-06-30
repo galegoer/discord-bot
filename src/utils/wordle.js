@@ -11,29 +11,37 @@ async function canPlay(msg) {
         let user = await User.findOne(query);
 
         if (user) {
-            const lastWordle = user.lastWordleDate.toDateString();
+            const lastWordleDate = user.lastWordleDate.toDateString();
             const currentDate = new Date().toDateString();
-            console.log(lastWordle, currentDate);
 
-            if (lastWordle === currentDate) {
+            // if word exists we can continue playing
+            if (user.currWordle !== "") {
+                return user;
+            // if word does not exist and date is same, we already played
+            } else if (lastWordleDate === currentDate) {
                 msg.reply('You have already played your daily wordle. Come back tomorrow!');
                 return;
+            // word does not exist and not same day, start game
+            } else {
+                let answer = randomWord();
+                user.currWordle = answer;
             }
+        // user does not exist set them up
         } else {
             // set to yesterday because new user nothing started
             let yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            console.log(yesterday.toDateString());
+            // yesterday.setDate(yesterday.getDate() - 1);
             user = new User({
                 ...query,
                 lastDaily: yesterday,
                 lastWordleDate: yesterday,
+                currWordle: randomWord(),
             });
         }
         await user.save();
         return user;
     } catch (error) {
-        console.log(`Error with !playwordle: ${error}`);
+        console.log(`Error with database: ${error}`);
     }
 };
 
@@ -70,22 +78,22 @@ async function showUpdate(msg, guesses, user) {
     let rowOffset = 0;
     let buffer = 0;
     let numGreen = 0;
-    console.log(user);
-    let answer = user.lastWordle;
+    let answer = user.currWordle;
 
-    for (let j = 0; j < 6; j++) {
-        for (let i = 0; i < 5; i++) {
-            if(guesses[j] === undefined) square = emptySquare;
-            else if(guesses[j].charAt(i) === answer[j].charAt(i)) {
+    for (let guess = 0; guess < 6; guess++) {
+        for (let letter = 0; letter < 5; letter++) {
+            // console.log(guesses[guess], answer);
+            if(guesses[guess] === undefined) square = emptySquare;
+            else if(guesses[guess].charAt(letter) === answer.charAt(letter)) {
                 square = greenSquare;
                 numGreen += 1;
             }
-            else if(answer[j].includes(guesses.charAt(i))) square = yellowSquare;
+            else if(answer.includes(guesses[guess].charAt(letter))) square = yellowSquare;
             else square = absentSquare;
 
-            context.drawImage(square, i*squareSize+buffer, rowOffset, squareSize, squareSize);
-            if(guesses[j] !== undefined) {
-                context.fillText(guesses[j].charAt(i), (squareSize/2)+buffer+squareSize*i, rowOffset+42);
+            context.drawImage(square, letter*squareSize+buffer, rowOffset, squareSize, squareSize);
+            if(guesses[guess] !== undefined) {
+                context.fillText(guesses[guess].charAt(letter), (squareSize/2)+buffer+squareSize*letter, rowOffset+42);
             }
 
             buffer += 5;
@@ -95,7 +103,9 @@ async function showUpdate(msg, guesses, user) {
     }
     if(numGreen == 5) {
         msg.reply(`Congrats! You guessed the word ${answer} in ${guesses.length+1} tries!`);
-    } else if (guesses == 5) {
+        user.wordleWins += 1;
+    // should just be equal to 5? but if it somehow pulls more guesses?
+    } else if (guesses.length >= 5) {
         msg.reply(`You failed to guess the word ${answer} in 5 tries! Try again tomorrow!`);
     } else {
         msg.reply({ files: [{attachment: canvas.toBuffer(), name: 'wordle.png'}]})
@@ -104,18 +114,21 @@ async function showUpdate(msg, guesses, user) {
         });
         return;
     }
+    // update so we can't play again today
     user.lastWordleDate = new Date();
-    user.lastWordle = "";
+    user.currWordle = "";
+    user.numGames += 1;
     await user.save();
     return;
 };
 
 async function LoadNewWordle(client, msg) {
 
+    // change if user types play wordle twice
     let user = await canPlay(msg);
     if(user !== undefined) {
         let answer = randomWord();
-        user.lastWordle = answer;
+        user.currWordle = answer;
         await user.save();
         // start off board
         showUpdate(msg, [], user);
@@ -124,36 +137,38 @@ async function LoadNewWordle(client, msg) {
 }
 
 async function GuessWordle(client, msg) {
-    let user = await canPlay(msg);
-    // console.log(user);
-    if(user !== undefined) {
-        // if game hasn't started
-        // TODO: pull guesses from user, could pull previous messages but they may talk in between
-        let prevMsgs = await msg.channel.messages.fetch({ limit: 10 });
-        let guesses = [];
-        for(let i=0; i < prevMsgs.length; i++) {
-            if(prevMsgs[i].includes('!guess') && validGuess(prevMsgs[i].split(" ")[i])) {
-                guesses.push(prevMsgs[i].split(" ")[i]);
-            }
-        }
-        console.log(guesses);
-
-        if(user.lastWordle == "") {
-            msg.reply("You have not started a game yet today. Type !playwordle to begin.");
-            return;
-        }
-        var guess = msg.content.split(" ")[1];
-            
-        if(!validGuess(guess)) {
-            msg.reply("Guesses must be a valid 5 letter word.");
-            return;
-        }
-
-        // Check guess
-        showUpdate(msg, guesses, user);
     
+    let user = await canPlay(msg);
+    if(user === undefined) return;
+    // TODO: pull guesses from user, pulling previous messages but they may talk in between or invalid guesses
+    const channel = await client.channels.fetch(msg.channelId);
+    let prevMsgs = await channel.messages.fetch(limit=10, after=user.lastWordleDate);
+    let guesses = [];
+
+    prevMsgs.reverse();
+
+    prevMsgs.forEach((prevMsg) => {
+        // ignore if last message was from someone else
+        // console.log(prevMsg.content, prevMsg.author, msg.author);
+        if (prevMsg.author.id !== msg.author.id) return;
+        // console.log(prevMsg.content.split(" "));
+        if(prevMsg.content.includes('!guess') && validGuess(prevMsg.content.split(" ")[1])) {
+            guesses.push(prevMsg.content.split(" ")[1].toUpperCase());
+        }
+    });
+
+    console.log(guesses);
+
+    var guess = msg.content.split(" ")[1];
+
+    if(!validGuess(guess)) {
+        msg.reply("Guesses must be a valid 5 letter word.");
         return;
     }
+    guesses.push(guess.toUpperCase());
+    showUpdate(msg, guesses, user);
+
+    return;
 }
 
 function ShowStats(client, msg) {
