@@ -78,7 +78,7 @@ module.exports = {
 
         const buffer = encoder.out.getData();
 
-        interaction.reply({content: `The winner is... || ${entryList[winnerName]} ||`, files: [{attachment: buffer, name: 'temp.gif'}]})
+        interaction.reply({content: `The winner is... || ${winnerName} ||`, files: [{attachment: buffer, name: 'temp.gif'}]})
         .catch((error) => {
             console.error('Error sending file: ', error);
         });
