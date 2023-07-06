@@ -134,8 +134,6 @@ async function showUpdate(msg, guesses, user) {
 
 async function GuessWordle(client, msg) {
     
-    randomWord();
-    return;
     let user = await canPlay(msg);
     if(user === undefined) return;
     // TODO: pull guesses from user, pulling previous messages but they may talk in between or invalid guesses
