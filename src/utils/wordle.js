@@ -122,20 +122,6 @@ async function showUpdate(msg, guesses, user) {
     return;
 };
 
-async function LoadNewWordle(client, msg) {
-
-    // change if user types play wordle twice
-    let user = await canPlay(msg);
-    if(user !== undefined) {
-        let answer = randomWord();
-        user.currWordle = answer;
-        await user.save();
-        // start off board
-        showUpdate(msg, [], user);
-        return;
-    }
-}
-
 async function GuessWordle(client, msg) {
     
     let user = await canPlay(msg);
@@ -171,8 +157,11 @@ async function GuessWordle(client, msg) {
     return;
 }
 
-function ShowStats(client, msg) {
+async function ShowStats(client, msg) {
+    let user = await canPlay(msg);
+    message_content = `Num Games: ${user.numGames} \n Wordle Wins: ${user.wordleWins} \n Win Rate: ${user.wordleWins/user.numGames}`
 
+    msg.reply(message_content);
 };
 
-module.exports = { LoadNewWordle, GuessWordle, ShowStats};
+module.exports = { GuessWordle, ShowStats};
