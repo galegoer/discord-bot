@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Canvas = require('canvas');
 const path = require('path');
+const fetch = require('node-fetch');
 
 async function canPlay(msg) {
     try {
@@ -23,7 +24,7 @@ async function canPlay(msg) {
                 return;
             // word does not exist and not same day, start game
             } else {
-                let answer = randomWord();
+                let answer = await randomWord();
                 user.currWordle = answer;
             }
         // user does not exist set them up
@@ -35,7 +36,7 @@ async function canPlay(msg) {
                 ...query,
                 lastDaily: yesterday,
                 lastWordleDate: yesterday,
-                currWordle: randomWord(),
+                currWordle: await randomWord(),
             });
         }
         await user.save();
@@ -45,11 +46,20 @@ async function canPlay(msg) {
     }
 };
 
-function randomWord() {
+async function randomWord() {
     //TODO: Make list of words
-    // var randInd = Math.floor(Math.random() * wordList.length);
-    // return wordList[randInd];
-    return 'TEMPS';
+    const url = `https://random-word-api.vercel.app/api?words=1&length=5`
+    try {
+        const response = await fetch(url);
+        if (response.ok) {
+            const data = await response.json();
+            const word = data[0];
+            return word;
+        }
+    } catch (error) {
+        console.error(error);
+        throw new Error(`Error with word generator: ${error}`);
+    }
 };
 
 function validGuess(guess) {
@@ -124,6 +134,8 @@ async function showUpdate(msg, guesses, user) {
 
 async function GuessWordle(client, msg) {
     
+    randomWord();
+    return;
     let user = await canPlay(msg);
     if(user === undefined) return;
     // TODO: pull guesses from user, pulling previous messages but they may talk in between or invalid guesses
