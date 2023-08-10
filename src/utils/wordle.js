@@ -37,6 +37,7 @@ async function canPlay(msg) {
                 lastDaily: yesterday,
                 lastWordleDate: yesterday,
                 currWordle: await randomWord(),
+                guesses: [],
             });
         }
         await user.save();
@@ -47,14 +48,13 @@ async function canPlay(msg) {
 };
 
 async function randomWord() {
-    //TODO: Make list of words
     const url = `https://random-word-api.vercel.app/api?words=1&length=5`
     try {
         const response = await fetch(url);
         if (response.ok) {
             const data = await response.json();
             const word = data[0];
-            return word;
+            return word.toUpperCase();
         }
     } catch (error) {
         console.error(error);
@@ -87,16 +87,13 @@ async function showUpdate(msg, guesses, user) {
     let squareSize = 62;
     let rowOffset = 0;
     let buffer = 0;
-    let numGreen = 0;
     let answer = user.currWordle;
 
     for (let guess = 0; guess < 6; guess++) {
         for (let letter = 0; letter < 5; letter++) {
-            // console.log(guesses[guess], answer);
             if(guesses[guess] === undefined) square = emptySquare;
             else if(guesses[guess].charAt(letter) === answer.charAt(letter)) {
                 square = greenSquare;
-                numGreen += 1;
             }
             else if(answer.includes(guesses[guess].charAt(letter))) square = yellowSquare;
             else square = absentSquare;
@@ -111,12 +108,11 @@ async function showUpdate(msg, guesses, user) {
         buffer = 0;
         rowOffset += squareSize+5;
     }
-    if(numGreen == 5) {
-        msg.reply(`Congrats! You guessed the word ${answer} in ${guesses.length+1} tries!`);
+    if(guesses[guesses.length-1] === answer ) {
+        msg.reply(`Congrats! You guessed the word ${answer} in ${guesses.length} tries!`);
         user.wordleWins += 1;
-    // should just be equal to 5? but if it somehow pulls more guesses?
-    } else if (guesses.length >= 5) {
-        msg.reply(`You failed to guess the word ${answer} in 5 tries! Try again tomorrow!`);
+    } else if (guesses.length >= 6) {
+        msg.reply(`You failed to guess the word ${answer} in 6 tries! Try again tomorrow!`);
     } else {
         msg.reply({ files: [{attachment: canvas.toBuffer(), name: 'wordle.png'}]})
         .catch((error) => {
@@ -127,6 +123,7 @@ async function showUpdate(msg, guesses, user) {
     // update so we can't play again today
     user.lastWordleDate = new Date();
     user.currWordle = "";
+    user.guesses = [];
     user.numGames += 1;
     await user.save();
     return;
@@ -136,22 +133,7 @@ async function GuessWordle(client, msg) {
     
     let user = await canPlay(msg);
     if(user === undefined) return;
-    // TODO: pull guesses from user, pulling previous messages but they may talk in between or invalid guesses
-    const channel = await client.channels.fetch(msg.channelId);
-    let prevMsgs = await channel.messages.fetch(limit=10, after=user.lastWordleDate);
-    let guesses = [];
-
-    prevMsgs.reverse();
-
-    prevMsgs.forEach((prevMsg) => {
-        // ignore if last message was from someone else
-        // console.log(prevMsg.content, prevMsg.author, msg.author);
-        if (prevMsg.author.id !== msg.author.id) return;
-        // console.log(prevMsg.content.split(" "));
-        if(prevMsg.content.includes('!guess') && validGuess(prevMsg.content.split(" ")[1])) {
-            guesses.push(prevMsg.content.split(" ")[1].toUpperCase());
-        }
-    });
+    let guesses = user.guesses;
 
     console.log(guesses);
 
@@ -162,6 +144,8 @@ async function GuessWordle(client, msg) {
         return;
     }
     guesses.push(guess.toUpperCase());
+    user.guesses = guesses
+    await user.save()
     showUpdate(msg, guesses, user);
 
     return;

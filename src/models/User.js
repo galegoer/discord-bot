@@ -21,6 +21,10 @@ const userSchema = new Schema({
         type: Date,
         required: true,
     },
+    guesses: {
+        type: Array,
+        default: [],
+    },
     currWordle: {
         type: String,
         default: "",
