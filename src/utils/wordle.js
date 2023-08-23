@@ -12,15 +12,22 @@ async function canPlay(msg) {
         let user = await User.findOne(query);
 
         if (user) {
-            const lastWordleDate = user.lastWordleDate.toDateString();
+            const lastWordleDate = user.lastWordleDate;
             const currentDate = new Date().toDateString();
 
             // if word exists we can continue playing
             if (user.currWordle !== "") {
                 return user;
             // if word does not exist and date is same, we already played
-            } else if (lastWordleDate === currentDate) {
-                msg.reply('You have already played your daily wordle. Come back tomorrow!');
+            } else if (lastWordleDate.toDateString() === currentDate) {
+                // TODO: repeated code change to reuse in util function
+                const hour = lastWordleDate.getHours();
+                const minute = lastWordleDate.getMinutes();
+                const period = hour >= 12 ? 'PM' : 'AM';
+                const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
+                const hourString = `${formattedHour}:${minute < 10 ? '0' : ''}${minute} ${period}`;
+
+                msg.reply(`You have already played your daily wordle. Come back at ${hourString}!`);
                 return;
             // word does not exist and not same day, start game
             } else {
@@ -108,9 +115,10 @@ async function showUpdate(msg, guesses, user) {
         buffer = 0;
         rowOffset += squareSize+5;
     }
-    if(guesses[guesses.length-1] === answer ) {
+    if(guesses[guesses.length-1] === answer) {
         msg.reply(`Congrats! You guessed the word ${answer} in ${guesses.length} tries!`);
         user.wordleWins += 1;
+        user.balance += 1000;
     } else if (guesses.length >= 6) {
         msg.reply(`You failed to guess the word ${answer} in 6 tries! Try again tomorrow!`);
     } else {
@@ -152,6 +160,7 @@ async function GuessWordle(client, msg) {
 }
 
 async function ShowStats(client, msg) {
+    // TODO: fix
     let user = await canPlay(msg);
     message_content = `Num Games: ${user.numGames} \n Wordle Wins: ${user.wordleWins} \n Win Rate: ${user.wordleWins/user.numGames}`
 

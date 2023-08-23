@@ -36,8 +36,14 @@ module.exports = {
                 console.log(currentDate);
 
                 if (lastDailyDate === currentDate) {
+                    const hour = lastDailyDate.getHours();
+                    const minute = lastDailyDate.getMinutes();
+                    const period = hour >= 12 ? 'PM' : 'AM';
+                    const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
+                    const hourString = `${formattedHour}:${minute < 10 ? '0' : ''}${minute} ${period}`;
+
                     interaction.editReply(
-                        'You have already collected your dailies today. Come back tomorrow!'
+                        `You have already collected your dailies today. Come back at ${hourString}!`
                     );
                     return;
                 }

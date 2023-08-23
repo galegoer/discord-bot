@@ -9,7 +9,7 @@ module.exports = (client) => {
         // sort so some files run first
         eventFiles.sort((a, b) => a > b);
 
-        const eventName = eventFolder.split('\\').pop();
+        const eventName = eventFolder.split(path.sep).pop();
 
         client.on(eventName, async (arg) => {
             for (const eventFile of eventFiles) {

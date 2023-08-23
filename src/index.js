@@ -1,6 +1,6 @@
 require('dotenv').config();
-const { Client, IntentsBitField, messageLink, EmbedBuilder, ActivityType } = require('discord.js');
-const { Configuration, OpenAIApi } = require('openai');
+const { Client, IntentsBitField } = require('discord.js');
+// const { Configuration, OpenAIApi } = require('openai');
 const mongoose = require('mongoose');
 const eventHandler = require('./handlers/eventHandler');
 
