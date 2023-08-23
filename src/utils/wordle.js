@@ -3,55 +3,52 @@ const Canvas = require('canvas');
 const path = require('path');
 const fetch = require('node-fetch');
 
-async function canPlay(msg) {
+async function getUser(msg) {
     try {
         const query = {
             userId: msg.author.id,
             guildId: msg.guildId,
         };
         let user = await User.findOne(query);
-
-        if (user) {
-            const lastWordleDate = user.lastWordleDate;
-            const currentDate = new Date().toDateString();
-
-            // if word exists we can continue playing
-            if (user.currWordle !== "") {
-                return user;
-            // if word does not exist and date is same, we already played
-            } else if (lastWordleDate.toDateString() === currentDate) {
-                // TODO: repeated code change to reuse in util function
-                const hour = lastWordleDate.getHours();
-                const minute = lastWordleDate.getMinutes();
-                const period = hour >= 12 ? 'PM' : 'AM';
-                const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
-                const hourString = `${formattedHour}:${minute < 10 ? '0' : ''}${minute} ${period}`;
-
-                msg.reply(`You have already played your daily wordle. Come back at ${hourString}!`);
-                return;
-            // word does not exist and not same day, start game
-            } else {
-                let answer = await randomWord();
-                user.currWordle = answer;
-            }
-        // user does not exist set them up
-        } else {
-            // set to yesterday because new user nothing started
-            let yesterday = new Date();
-            // yesterday.setDate(yesterday.getDate() - 1);
-            user = new User({
-                ...query,
-                lastDaily: yesterday,
-                lastWordleDate: yesterday,
-                currWordle: await randomWord(),
-                guesses: [],
-            });
-        }
-        await user.save();
         return user;
     } catch (error) {
-        console.log(`Error with database: ${error}`);
+        console.log(`Error finding user: ${error}`);
     }
+}
+
+async function canPlay(msg) {
+    let user = await getUser(msg);
+    if (user) {
+        const lastWordleDate = user.lastWordleDate.toDateString();
+        const currentDate = new Date().toDateString();
+
+        // if word exists we can continue playing
+        if (user.currWordle !== "") {
+            return user;
+        // if word does not exist and date is same, we already played
+        } else if (lastWordleDate === currentDate) {
+            msg.reply(`You have already played your daily wordle. Come back tomorrow!`);
+            return;
+        // word does not exist and not same day, start game
+        } else {
+            let answer = await randomWord();
+            user.currWordle = answer;
+        }
+    // user does not exist set them up
+    } else {
+        // set to yesterday because new user
+        let yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        user = new User({
+            ...query,
+            lastDaily: yesterday,
+            lastWordleDate: yesterday,
+            currWordle: await randomWord(),
+            guesses: [],
+        });
+    }
+    await user.save();
+    return user;
 };
 
 async function randomWord() {
@@ -160,9 +157,8 @@ async function GuessWordle(client, msg) {
 }
 
 async function ShowStats(client, msg) {
-    // TODO: fix
-    let user = await canPlay(msg);
-    message_content = `Num Games: ${user.numGames} \n Wordle Wins: ${user.wordleWins} \n Win Rate: ${user.wordleWins/user.numGames}`
+    let user = await getUser(msg);
+    message_content = `Num Games: ${user.numGames} \n Wordle Wins: ${user.wordleWins} \n Win Rate: ${((user.wordleWins/user.numGames) * 100).toFixed(2)}`
 
     msg.reply(message_content);
 };

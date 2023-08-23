@@ -57,7 +57,6 @@ module.exports = {
         background();
         
         let iterations = winnerInd + (num_entries * 4);
-        console.log(winnerInd, iterations);
         let optionNum = 0;
         for (let i=0; i<=iterations * slice; i += slice) {
             ctx.fillStyle = '#72ec5c';

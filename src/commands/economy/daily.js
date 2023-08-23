@@ -33,17 +33,10 @@ module.exports = {
             if (user) {
                 const lastDailyDate = user.lastDaily.toDateString();
                 const currentDate = new Date().toDateString();
-                console.log(currentDate);
 
                 if (lastDailyDate === currentDate) {
-                    const hour = lastDailyDate.getHours();
-                    const minute = lastDailyDate.getMinutes();
-                    const period = hour >= 12 ? 'PM' : 'AM';
-                    const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
-                    const hourString = `${formattedHour}:${minute < 10 ? '0' : ''}${minute} ${period}`;
-
                     interaction.editReply(
-                        `You have already collected your dailies today. Come back at ${hourString}!`
+                        `You have already collected your dailies today. Come back tomorrow!`
                     );
                     return;
                 }
