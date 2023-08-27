@@ -113,7 +113,7 @@ async function showUpdate(msg, guesses, user) {
         rowOffset += squareSize+5;
     }
     if(guesses[guesses.length-1] === answer) {
-        msg.reply(`Congrats! You guessed the word ${answer} in ${guesses.length} tries!`);
+        msg.reply(`Congrats! You guessed the word ${answer} in ${guesses.length} tries! Your new balance is ${user.balance+1000}`);
         user.wordleWins += 1;
         user.balance += 1000;
     } else if (guesses.length >= 6) {
@@ -158,7 +158,7 @@ async function GuessWordle(client, msg) {
 
 async function ShowStats(client, msg) {
     let user = await getUser(msg);
-    message_content = `Num Games: ${user.numGames} \n Wordle Wins: ${user.wordleWins} \n Win Rate: ${((user.wordleWins/user.numGames) * 100).toFixed(2)}`
+    message_content = `Num Games: ${user.numGames}\n Wordle Wins: ${user.wordleWins}\n Win Rate: ${((user.wordleWins/user.numGames) * 100).toFixed(2)}%`
 
     msg.reply(message_content);
 };
