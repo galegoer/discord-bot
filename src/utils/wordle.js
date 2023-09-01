@@ -44,7 +44,6 @@ async function canPlay(msg) {
             lastDaily: yesterday,
             lastWordleDate: yesterday,
             currWordle: await randomWord(),
-            guesses: [],
         });
     }
     await user.save();
@@ -156,11 +155,4 @@ async function GuessWordle(client, msg) {
     return;
 }
 
-async function ShowStats(client, msg) {
-    let user = await getUser(msg);
-    message_content = `Num Games: ${user.numGames}\n Wordle Wins: ${user.wordleWins}\n Win Rate: ${((user.wordleWins/user.numGames) * 100).toFixed(2)}%`
-
-    msg.reply(message_content);
-};
-
-module.exports = { GuessWordle, ShowStats};
+module.exports = { GuessWordle };
