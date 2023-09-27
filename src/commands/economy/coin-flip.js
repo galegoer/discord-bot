@@ -32,7 +32,6 @@ module.exports = {
     callback: async (client, interaction) => {
 
         let gamblePoints = interaction.options.get('points').value;
-        console.log(gamblePoints, typeof gamblePoints);
         if ( gamblePoints < 0) {
             interaction.reply(`Please gamble with more than 0 points`);
             return;
@@ -63,7 +62,6 @@ module.exports = {
                 );
                 return;
             }
-            console.log(user);
 
             if (gamblePoints > user.balance) {
                 interaction.editReply(

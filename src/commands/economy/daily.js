@@ -1,7 +1,7 @@
 const { Client, Interaction } = require('discord.js');
 const User = require('../../models/User');
 
-const dailyAmount = 100;
+const dailyAmount = 1000;
 
 module.exports = {
     name: 'daily',
@@ -31,8 +31,10 @@ module.exports = {
             let user = await User.findOne(query);
 
             if (user) {
-                const lastDailyDate = user.lastDaily.toDateString();
+                const lastDailyDate = new Date(user.lastDaily).toDateString();
                 const currentDate = new Date().toDateString();
+
+                console.log(lastDailyDate, currentDate);
 
                 if (lastDailyDate === currentDate) {
                     interaction.editReply(

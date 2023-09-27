@@ -19,7 +19,7 @@ async function getUser(msg) {
 async function canPlay(msg) {
     let user = await getUser(msg);
     if (user) {
-        const lastWordleDate = user.lastWordleDate.toDateString();
+        const lastWordleDate = new Date(user.lastWordleDate).toDateString();
         const currentDate = new Date().toDateString();
 
         // if word exists we can continue playing
@@ -114,7 +114,7 @@ async function showUpdate(msg, guesses, user) {
     if(guesses[guesses.length-1] === answer) {
         msg.reply(`Congrats! You guessed the word ${answer} in ${guesses.length} tries! Your new balance is ${user.balance+1000}`);
         user.wordleWins += 1;
-        user.balance += 1000;
+        user.balance += 10000;
     } else if (guesses.length >= 6) {
         msg.reply(`You failed to guess the word ${answer} in 6 tries! Try again tomorrow!`);
     } else {
