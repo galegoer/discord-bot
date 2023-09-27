@@ -31,7 +31,7 @@ module.exports = {
             let user = await User.findOne(query);
 
             if (user) {
-                const lastDailyDate = new Date(user.lastDaily).toDateString();
+                const lastDailyDate = new Date(user.lastDaily.toString()).toDateString();
                 const currentDate = new Date().toDateString();
 
                 console.log(lastDailyDate, currentDate);

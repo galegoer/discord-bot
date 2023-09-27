@@ -19,7 +19,7 @@ async function getUser(msg) {
 async function canPlay(msg) {
     let user = await getUser(msg);
     if (user) {
-        const lastWordleDate = new Date(user.lastWordleDate).toDateString();
+        const lastWordleDate = new Date(user.lastWordleDate.toString()).toDateString();
         const currentDate = new Date().toDateString();
 
         // if word exists we can continue playing
