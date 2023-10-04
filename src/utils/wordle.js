@@ -28,11 +28,8 @@ async function canPlay(msg) {
             day: "numeric"
         };
 
-        // Working solution for Node on EC2 instance, implementation dependent otherwise
         var lastWordleDate =  new Date(user.lastWordleDate.toString()).toLocaleString("en-CA", options);
         var currDateStr = currDate.toLocaleString("en-CA", options);
-
-        console.log(lastDailyDate, currDateStr);
 
         // if word exists we can continue playing
         if (user.currWordle !== "") {
