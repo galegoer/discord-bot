@@ -36,11 +36,11 @@ module.exports = {
                     year: "numeric",
                     month: "2-digit",
                     day: "numeric"
-                }
+                };
 
                 // Working solution for Node on EC2 instance, implementation dependent otherwise
-                var lastDailyDate =  new Date(user.lastDaily.toString()).toLocaleString("en-CA", {options});
-                var currDateStr = currDate.toLocaleString("en-CA", {options});
+                var lastDailyDate =  new Date(user.lastDaily.toString()).toLocaleString("en-CA", options);
+                var currDateStr = currDate.toLocaleString("en-CA", options);
 
                 console.log(lastDailyDate, currDateStr);
 

@@ -26,11 +26,11 @@ async function canPlay(msg) {
             year: "numeric",
             month: "2-digit",
             day: "numeric"
-        }
+        };
 
         // Working solution for Node on EC2 instance, implementation dependent otherwise
-        var lastWordleDate =  new Date(user.lastWordleDate.toString()).toLocaleString("en-CA", {options});
-        var currDateStr = currDate.toLocaleString("en-CA", {options});
+        var lastWordleDate =  new Date(user.lastWordleDate.toString()).toLocaleString("en-CA", options);
+        var currDateStr = currDate.toLocaleString("en-CA", options);
 
         console.log(lastDailyDate, currDateStr);
 
