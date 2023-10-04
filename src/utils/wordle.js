@@ -3,6 +3,8 @@ const Canvas = require('canvas');
 const path = require('path');
 const fetch = require('node-fetch');
 
+const wordleAmt = 10000;
+
 async function getUser(msg) {
     try {
         const query = {
@@ -19,14 +21,24 @@ async function getUser(msg) {
 async function canPlay(msg) {
     let user = await getUser(msg);
     if (user) {
-        const lastWordleDate = new Date(user.lastWordleDate.toString()).toDateString();
-        const currentDate = new Date().toDateString();
+        var currDate = new Date();
+        var options = {
+            year: "numeric",
+            month: "2-digit",
+            day: "numeric"
+        }
+
+        // Working solution for Node on EC2 instance, implementation dependent otherwise
+        var lastWordleDate =  new Date(user.lastWordleDate.toString()).toLocaleString("en-CA", {options});
+        var currDateStr = currDate.toLocaleString("en-CA", {options});
+
+        console.log(lastDailyDate, currDateStr);
 
         // if word exists we can continue playing
         if (user.currWordle !== "") {
             return user;
         // if word does not exist and date is same, we already played
-        } else if (lastWordleDate === currentDate) {
+        } else if (lastWordleDate === currDateStr) {
             msg.reply(`You have already played your daily wordle. Come back tomorrow!`);
             return;
         // word does not exist and not same day, start game
@@ -37,7 +49,7 @@ async function canPlay(msg) {
     // user does not exist set them up
     } else {
         // set to yesterday because new user
-        let yesterday = new Date();
+        let yesterday = currDate;
         yesterday.setDate(yesterday.getDate() - 1);
         user = new User({
             ...query,
@@ -112,9 +124,9 @@ async function showUpdate(msg, guesses, user) {
         rowOffset += squareSize+5;
     }
     if(guesses[guesses.length-1] === answer) {
-        msg.reply(`Congrats! You guessed the word ${answer} in ${guesses.length} tries! Your new balance is ${user.balance+1000}`);
+        user.balance += wordleAmt;
+        msg.reply(`Congrats! You guessed the word ${answer} in ${guesses.length} tries! Your new balance is ${user.balance}`);
         user.wordleWins += 1;
-        user.balance += 10000;
     } else if (guesses.length >= 6) {
         msg.reply(`You failed to guess the word ${answer} in 6 tries! Try again tomorrow!`);
     } else {

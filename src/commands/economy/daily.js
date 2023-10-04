@@ -31,26 +31,34 @@ module.exports = {
             let user = await User.findOne(query);
 
             if (user) {
-                const lastDailyDate = new Date(user.lastDaily.toString()).toDateString();
-                const currentDate = new Date().toDateString();
+                var currDate = new Date();
+                var options = {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "numeric"
+                }
 
-                console.log(lastDailyDate, currentDate);
+                // Working solution for Node on EC2 instance, implementation dependent otherwise
+                var lastDailyDate =  new Date(user.lastDaily.toString()).toLocaleString("en-CA", {options});
+                var currDateStr = currDate.toLocaleString("en-CA", {options});
 
-                if (lastDailyDate === currentDate) {
+                console.log(lastDailyDate, currDateStr);
+
+                if (lastDailyDate === currDateStr) {
                     interaction.editReply(
                         `You have already collected your dailies today. Come back tomorrow!`
                     );
                     return;
                 }
                 
-                user.lastDaily = new Date();
+                user.lastDaily = currDate;
             } else {
                 // set to yesterday because new user no wordle but daily points will be added
-                let yesterday = new Date();
+                let yesterday = currDate;
                 yesterday.setDate(yesterday.getDate() - 1);
                 user = new User({
                     ...query,
-                    lastDaily: new Date(),
+                    lastDaily: currDate,
                     lastWordleDate: yesterday,
                 });
             }
