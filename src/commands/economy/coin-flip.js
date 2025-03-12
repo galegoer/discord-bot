@@ -3,7 +3,7 @@ const User = require('../../models/User');
 
 module.exports = {
     name: 'coin-flip',
-    description: 'Gamble your points playing blackjack!',
+    description: 'Gamble your points with a coin flip!',
     options: [
         {
             name: 'points',

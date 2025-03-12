@@ -4,6 +4,7 @@ const path = require('path');
 const fetch = require('node-fetch');
 
 const wordleAmt = 10000;
+const dailyLimit = false;
 
 async function getUser(msg) {
     try {
@@ -19,9 +20,13 @@ async function getUser(msg) {
 }
 
 async function canPlay(msg) {
-    let user = await getUser(msg);
+    const query = {
+        userId: msg.author.id,
+        guildId: msg.guildId,
+    };
+    let user = await User.findOne(query);
+    var currDate = new Date();
     if (user) {
-        var currDate = new Date();
         var options = {
             year: "numeric",
             month: "2-digit",
@@ -35,9 +40,9 @@ async function canPlay(msg) {
         if (user.currWordle !== "") {
             return user;
         // if word does not exist and date is same, we already played
-        } else if (lastWordleDate === currDateStr) {
-            msg.reply(`You have already played your daily wordle. Come back tomorrow!`);
-            return;
+        // } else if (lastWordleDate === currDateStr) {
+        //     msg.reply(`You have already played your daily wordle. Come back tomorrow!`);
+        //     return;
         // word does not exist and not same day, start game
         } else {
             let answer = await randomWord();

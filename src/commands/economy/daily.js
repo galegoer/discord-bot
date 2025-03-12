@@ -29,9 +29,8 @@ module.exports = {
             };
 
             let user = await User.findOne(query);
-
+            var currDate = new Date();
             if (user) {
-                var currDate = new Date();
                 var options = {
                     year: "numeric",
                     month: "2-digit",
