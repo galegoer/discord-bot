@@ -1,4 +1,5 @@
-const { ApplicationCommandOptionType, Embed, EmbedBuilder } = require('discord.js');
+const { ApplicationCommandOptionType } = require('discord.js');
+const { shuffleArray }  = require("../../utils/misc.js");
 
 module.exports = {
     name: 'gamble',
@@ -30,23 +31,35 @@ module.exports = {
         message.react('☝️');
         // message.edit('edited');
 
-        const filter = (reaction, user) => { 
-            return reaction.emoji.name === '☝️' || reaction.emoji.name === '🛑' && user.id == interaction.user.id;
+        const reactionFilter = (reaction, user) => { 
+            return ['☝️', '🛑'].includes(reaction.emoji.name) && user.id == interaction.user.id;
         }
-        const collector = message.createReactionCollector(filter, { time: 15000 });
-        console.log('erfse');
+        message.awaitReactions({ filter: reactionFilter, max: 1, time: 60_000, errors: ['time'] })
+        .then(collected => {
+            const reaction = collected.first();
 
-        collector.on('collect', (reaction, user) => {
-            console.log(user);
-            console.log(interaction.member.id);
-            console.log(reaction);
-        });
-
-        collector.on('end', collected => {
-            if (collected.size === 0) {
-                message.reply("You didn't respond in time, please start over.")
+            if (reaction.emoji.name === '☝️') {
+                message.reply('You reacted with hit me.');
+            } else if (reaction.emoji.name === '🛑') {
+                message.reply('You reacted with a stop.');
             }
         })
+        .catch(collected => {
+            message.reply('You reacted with neither in time, please start over.');
+	    })
+        // const collector = message.createReactionCollector(filter, { time: 15000 });
+
+        // collector.on('collect', (reaction, user) => {
+        //     console.log(user);
+        //     console.log(interaction.member.id);
+        //     console.log(reaction);
+        // });
+
+        // collector.on('end', collected => {
+        //     if (collected.size === 0) {
+        //         message.reply("You didn't respond in time, please start over.")
+        //     }
+        // })
 
     },
 };
