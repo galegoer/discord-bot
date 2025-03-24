@@ -1,5 +1,5 @@
 const { ApplicationCommandOptionType } = require('discord.js');
-const { shuffleArray }  = require("../../utils/misc.js");
+const { shuffleArray, calculateScore }  = require("../../utils/misc.js");
 
 module.exports = {
     name: 'gamble',
@@ -25,41 +25,52 @@ module.exports = {
         let userHand = [deck.shift(), deck.shift()];
         let dealerHand = [deck.shift(), deck.shift()];
 
-        const message = await interaction.reply({content: `Your hand: ${userHand}\n Dealers Hand: ${dealerHand[0]}`, fetchReply: true });
+        const response = await interaction.reply({content: `Your hand: ${userHand}\n Dealers Hand: ${dealerHand[0]}`, withResponse: true });
         
-        message.react('🛑');
-        message.react('☝️');
-        // message.edit('edited');
+        response.resource.message.react('🛑');
+        response.resource.message.react('☝️');
+        const message = response.resource.message;
 
-        const reactionFilter = (reaction, user) => { 
+        const reactionFilter = (reaction, user) => {
             return ['☝️', '🛑'].includes(reaction.emoji.name) && user.id == interaction.user.id;
         }
-        message.awaitReactions({ filter: reactionFilter, max: 1, time: 60_000, errors: ['time'] })
-        .then(collected => {
-            const reaction = collected.first();
 
+        const collector = message.createReactionCollector({ filter: reactionFilter, time: 60_000, errors: ['time'] });
+        
+        // TODO: Deduct points
+        // TODO: Optimize calling calculateScore
+        collector.on('collect', (reaction, user) => {
             if (reaction.emoji.name === '☝️') {
-                message.reply('You reacted with hit me.');
+                console.log('You reacted with hit me.');
+                userHand.push(deck.shift());
+                if (calculateScore(userHand) === -1) {
+                    interaction.editReply(`Your hand: ${userHand}\n You lost! You lost __ points!`);
+                    collector.stop();
+                    return;
+                } else {
+                    interaction.editReply(`Your hand: ${userHand}\n Dealers Hand: ${dealerHand[0]}`);
+                }
             } else if (reaction.emoji.name === '🛑') {
-                message.reply('You reacted with a stop.');
+                console.log('You reacted with a stop.');
+                let userScore = calculateScore(userHand);
+                let dealerScore = calculateScore(dealerHand);
+                while (userScore > dealerScore && dealerScore !== -1) {
+                    dealerHand.push(deck.shift());
+                    dealerScore = calculateScore(dealerHand);
+                }
+                if (dealerScore === -1) {
+                    interaction.editReply(`Your hand: ${userHand}\n Dealers Hand: ${dealerHand}\n You won! You get __ points!`);
+                    collector.stop();
+                } else {
+                    interaction.editReply(`Your hand: ${userHand}\n Dealers Hand: ${dealerHand}\n You lost! You lose __ points!`);
+                    collector.stop();
+                }
+                return;
             }
-        })
-        .catch(collected => {
-            message.reply('You reacted with neither in time, please start over.');
-	    })
-        // const collector = message.createReactionCollector(filter, { time: 15000 });
-
-        // collector.on('collect', (reaction, user) => {
-        //     console.log(user);
-        //     console.log(interaction.member.id);
-        //     console.log(reaction);
-        // });
-
-        // collector.on('end', collected => {
-        //     if (collected.size === 0) {
-        //         message.reply("You didn't respond in time, please start over.")
-        //     }
-        // })
-
+        });
+        collector.on('end', (collected, reason) => {
+            console.log('Collector ended:', reason);
+            if (reason === 'time') message.reply('You took too long please try again! Points have not been deducted.');
+        });
     },
 };
