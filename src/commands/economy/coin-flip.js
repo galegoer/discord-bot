@@ -32,7 +32,7 @@ module.exports = {
     callback: async (client, interaction) => {
 
         let gamblePoints = interaction.options.get('points').value;
-        if ( gamblePoints < 0) {
+        if ( gamblePoints <= 0) {
             interaction.reply(`Please gamble with more than 0 points`);
             return;
         };
