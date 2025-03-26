@@ -62,7 +62,7 @@ module.exports = {
             let userHand = [deck.shift(), deck.shift()];
             let dealerHand = [deck.shift(), deck.shift()];
             
-            const response = await interaction.reply({content: `Your hand: ${userHand}\n Dealers Hand: ${dealerHand[0]}`, withResponse: true });
+            const response = await interaction.reply({content: `Your Hand: ${userHand}\n Dealers Hand: ${dealerHand[0]}`, withResponse: true });
             
             response.resource.message.react('🛑');
             response.resource.message.react('☝️');
