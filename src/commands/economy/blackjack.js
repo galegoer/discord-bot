@@ -40,9 +40,8 @@ module.exports = {
                     lastDaily: new Date(),
                     lastWordleDate: yesterday,
                 });
-                interaction.reply(
-                    `Please try again.`
-                );
+                interaction.reply(`Please try again. You just set up your account. You don't have any points yet.`);
+                await userInfo.save();
                 return;
             }
 

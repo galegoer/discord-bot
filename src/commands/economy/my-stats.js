@@ -40,7 +40,9 @@ module.exports = {
                     lastDaily: yesterday,
                     lastWordleDate: yesterday,
                 });
+                interaction.reply(`Please try again. You just set up your account. You don't have any points yet.`);
                 await user.save();
+                return;
             }
             // TODO: if numGames is 0
             interaction.editReply(

@@ -30,4 +30,10 @@ function calculateScore(array) {
     return score;
 }
 
-module.exports = { shuffleArray, calculateScore };
+function calculatePokerWinner(pokerHands) {
+    scoreOrder = ['High card', 'Pair', 'Two pair', 'Three of a kind', 'Straight', 'Flush', 'Full house', 'Four of a kind', 'Straight flush', 'Royal flush'];
+    let filter = {};
+
+}
+
+module.exports = { shuffleArray, calculateScore, calculatePokerWinner };
