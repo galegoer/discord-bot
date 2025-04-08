@@ -25,10 +25,10 @@ module.exports = {
         try {
             // let usersInfo = await User.find();
 
-            const deck = ['AceS', 'KingS', 'QueenS', 'JackS', '10S', '9S', '8S', '7S', '6S', '5S', '4S', '3S', '2S',
-                'AceH', 'KingH', 'QueenH', 'JackH', '10H', '9H', '8H', '7H', '6H', '5H', '4H', '3H', '2H',
-                'AceC', 'KingC', 'QueenC', 'JackC', '10C', '9C', '8C', '7C', '6C', '5C', '4C', '3C', '2C',
-                'AceD', 'KingD', 'QueenD', 'JackD', '10D', '9D', '8D', '7D', '6D', '5D', '4D', '3D', '2D'
+            const deck = [['Ace', 'S'], ['King', 'S'], ['Queen', 'S'], ['Jack','S'], ['10','S'], ['9','S'], ['8','S'], ['7','S'], ['6','S'], ['5','S'], ['4','S'], ['3','S'], ['2','S'],
+                        ['Ace', 'D'], ['King', 'D'], ['Queen', 'D'], ['Jack','D'], ['10','D'], ['9','D'], ['8','D'], ['7','D'], ['6','D'], ['5','D'], ['4','D'], ['3','D'], ['2','D'],
+                        ['Ace', 'C'], ['King', 'C'], ['Queen', 'C'], ['Jack','C'], ['10','C'], ['9','C'], ['8','C'], ['7','C'], ['6','C'], ['5','C'], ['4','C'], ['3','C'], ['2','C'],
+                        ['Ace', 'H'], ['King', 'H'], ['Queen', 'H'], ['Jack','H'], ['10','H'], ['9','H'], ['8','H'], ['7','H'], ['6','H'], ['5','H'], ['4','H'], ['3','H'], ['2','H']
             ];
             shuffleArray(deck);
             
