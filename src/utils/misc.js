@@ -1,3 +1,5 @@
+const Calendar = require('../models/Calendar');
+
 function shuffleArray(array) {
     for (let i = array.length - 1; i >= 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -40,6 +42,8 @@ function getCounts(hand) {
 
 function calculateHand(hand) {
     const sortBy = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace'];
+    let cardType = hand.map(x => x[1]);
+    let cards = hand.map(x => x[0]);
     const customSort = ({ data, sortBy }) => {
         const sortByObject = sortBy.reduce((obj, item, index) => {
             return {
@@ -48,51 +52,60 @@ function calculateHand(hand) {
             };
         }, {});
         return data.sort(
-            (a, b) => sortByObject[a[0]] - sortByObject[b[0]]
+            (a, b) => sortByObject[a] - sortByObject[b]
         );
     };
-    hand.customSort({ data: hand, sortBy: sortBy });
+    let sortedHand = customSort({ data: cards, sortBy: sortBy });
     let handScore = 0;
-    let cardType = hand.map(x => x[1]);
-    let cardNum = hand.map(x => x[0]);
     let countType = getCounts(cardType);
-    let countNum = getCounts(cardNum);
+    let occurences = getCounts(cards);
+    let straight = sortBy.join(',').includes(sortedHand.join(','));
 
-    if (sortedHand in sortBy && Object.values(countType).includes(5)) { // Royal flush / straight flush
-        handScore += 8
-    } else if (Object.values(countNum).includes(4)) { // Four of a kind
-        handScore += 7
-    } else if (Object.values(countNum).includes(3) && Object.values(countNum).includes(2)) { // Full house
-        handScore += 6
+    if (straight && Object.values(countType).includes(5)) { // Royal flush / straight flush
+        handScore += 68 * 8
+    } else if (Object.values(occurences).includes(4)) { // Four of a kind
+        handScore += 67 * 7
+    } else if (Object.values(occurences).includes(3) && Object.values(occurences).includes(2)) { // Full house
+        handScore += 66 * 6
     } else if (Object.values(countType).includes(5)) { // Flush
-        handScore += 5
-    } else if (sortedHand in sortBy) { // Straight
-        handScore += 4
-    } else if (Object.values(countNum).includes(3)) { // Three of a kind
-        handScore += 3
-    } else if (Object.values(countNum).includes(2) && Object.values(countNum).includes(2)) { // Two pair
-        handScore += 2
-    } else if (Object.values(countNum).includes(2)) { // Pair
-        handScore += 1
+        handScore += 65 * 5
+    } else if (straight) { // Straight
+        handScore += 64 * 4
+    } else if (Object.values(occurences).includes(3)) { // Three of a kind
+        handScore += 63 * 3
+    } else if (Object.values(occurences).includes(2) && Object.values(occurences).includes(2)) { // Two pair
+        handScore += 62 * 2
+    } else if (Object.values(occurences).includes(2)) { // Pair
+        handScore += 61
     }
-    return handScore, hand
+    handScore += sortBy.indexOf(cards[0]) + sortBy.indexOf(cards[1]) + sortBy.indexOf(cards[2]) + sortBy.indexOf(cards[3]) + sortBy.indexOf(cards[4]);
+    return [handScore, sortedHand]
 }
 
 function calculatePokerWinner(pokerHands) {
-    scoreOrder = ['High card', 'Pair', 'Two pair', 'Three of a kind', 'Straight', 'Flush', 'Full house', 'Four of a kind', 'Straight flush', 'Royal flush'];
-    let filter = {};
+    let currWinner = [0, []];
     for (pokerHand in pokerHands) {
-        let score = compareHands(pokerHand);
-        if (scoreOrder[score] in filter) {
-            filter[scoreOrder[score]].push(pokerHand);
-        } else {
-            filter[scoreOrder[score]] = [pokerHand];
+        currHand = calculateHand(pokerHand);
+        if (currWinner[0] > currHand[0]) {
+            currWinner = currHand;
         }
     }
-    return filter
-
-
-
+    return currWinner;
 }
 
-module.exports = { shuffleArray, calculateScore, calculatePokerWinner };
+async function getCalendarMessage() {
+    let message = ``;
+    let calendarInfo = await Calendar.findOne();
+    if (calendarInfo.events.length == 0) {
+        return `There are no events coming up! You guys are lame you should plan something...`;
+    }
+    for (let i = 0; i < calendarInfo.events.length; i++) {
+        let event = calendarInfo.events[i];
+        message += `## ${event.name}\n*Date*: ${event.date}\n`;
+        message += event.description ? `*Description*: ${event.description}\n` : '';
+        message += `*Location*: ${event.location}\n`;
+    }
+    return `The current upcoming events are:\n${message}`;
+}
+
+module.exports = { shuffleArray, calculateScore, calculatePokerWinner, getCalendarMessage };

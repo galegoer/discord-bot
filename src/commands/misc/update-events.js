@@ -1,4 +1,5 @@
 const { ApplicationCommandOptionType } = require('discord.js');
+const { getCalendarMessage }  = require("../../utils/misc.js");
 const Calendar = require('../../models/Calendar');
 
 module.exports = {
@@ -62,7 +63,8 @@ module.exports = {
             if (operation === 'delete') {
                 calendarInfo.events = calendarInfo.events.filter(event => event.name !== name);
                 await calendarInfo.save();
-                interaction.reply(`Event deleted! Type /calendar to see what's upcoming.`);
+                let calendarMsg = await getCalendarMessage();
+                interaction.reply(`Event deleted!\n${calendarMsg}`);
                 return;
             }
             if (!calendarInfo) {
@@ -75,7 +77,8 @@ module.exports = {
                 calendarInfo.events.push({ name, date, description, location });
             }
             await calendarInfo.save();
-            interaction.reply(`Event updated! Type /calendar to see what's upcoming.`);
+            let calendarMsg = await getCalendarMessage();
+            interaction.reply(`Event updated!\n${calendarMsg}`);
         } catch (error) {
             console.log(`Error with /update-events: ${error}`);
         }
